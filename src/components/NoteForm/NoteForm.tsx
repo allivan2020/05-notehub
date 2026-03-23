@@ -1,9 +1,12 @@
 import * as Yup from 'yup';
-import css from '../NoteForm/NoteForm.module.css';
+import css from './NoteForm.module.css';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createNote } from '../../services/noteService';
+import { type Note } from '../../types/note';
 
 interface NoteFormProps {
-  onSubmit: (values: { title: string; content: string; tag: string }) => void;
+  onSuccess: () => void;
   onCancel: () => void;
 }
 
@@ -18,14 +21,24 @@ const NoteSchema = Yup.object().shape({
     .required('Required'),
 });
 
-export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
+export default function NoteForm({ onSuccess, onCancel }: NoteFormProps) {
+  const queryClient = useQueryClient();
+
+  const addNoteMutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onSuccess(); // Закрываем модалку
+    },
+  });
+
   return (
     <Formik
       initialValues={{ title: '', content: '', tag: 'Todo' }}
       validationSchema={NoteSchema}
       onSubmit={(values, actions) => {
-        onSubmit(values); // Передаем данные наверх в App
-        actions.resetForm(); // Очищаем форму
+        addNoteMutation.mutate(values as Omit<Note, 'id'>);
+        actions.resetForm();
       }}
     >
       <Form className={css.form}>
@@ -44,7 +57,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
             rows={8}
             className={css.textarea}
           />
-          <ErrorMessage name="title" component="span" className={css.error} />
+          <ErrorMessage name="content" component="span" className={css.error} />
         </div>
 
         <div className={css.formGroup}>
@@ -56,7 +69,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
             <option value="Meeting">Meeting</option>
             <option value="Shopping">Shopping</option>
           </Field>
-          <ErrorMessage name="title" component="span" className={css.error} />
+          <ErrorMessage name="tag" component="span" className={css.error} />
         </div>
 
         <div className={css.actions}>

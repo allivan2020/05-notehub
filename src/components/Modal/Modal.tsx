@@ -9,15 +9,19 @@ interface ModalProps {
 
 export default function Modal({ children, onClose }: ModalProps) {
   useEffect(() => {
+    // Блокируем скролл
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === 'Escape') {
         onClose();
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      // Возвращаем скролл при закрытии
+      document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose]);
