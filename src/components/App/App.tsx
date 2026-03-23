@@ -19,7 +19,7 @@ function App() {
     setPage(1);
   }, 500);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data } = useQuery({
     queryKey: ['notes', page, searchQuery],
     queryFn: () => fetchNotes({ page, perPage: 10, search: searchQuery }),
     placeholderData: keepPreviousData, // Плавная пагинация без мерцания
